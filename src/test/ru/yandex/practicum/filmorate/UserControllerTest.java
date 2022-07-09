@@ -8,6 +8,7 @@ import yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class UserControllerTest {
@@ -39,6 +40,14 @@ public class UserControllerTest {
         final User user = new User();
         user.setLogin(" ");
         assertThrows(UserValidationException.class, () -> userController.validateUser(user) );
+    }
+    @Test
+    void validateName() {
+        final UserController userController = new UserController();
+        final User user = new User();
+        user.setLogin("painful");
+        user.setName(" ");
+        assertEquals(user.getName(), "painful");
     }
     @Test
     void validateBirthday() {
