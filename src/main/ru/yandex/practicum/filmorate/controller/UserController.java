@@ -31,10 +31,10 @@ public class UserController {
     }
 
     public void validateUser(yandex.practicum.filmorate.model.User user) {
-        if ((user.getEmail().isEmpty())||(!user.getEmail().contains("@")||(user.getEmail().contains(" ")))) {
+        if ((user.getEmail().equals(" "))||(!user.getEmail().contains("@")||(user.getEmail().contains(" ")))) {
             log.trace("ошибка e-mail");
             throw new UserValidationException("E-mail не может быть пустым, с пробелами и должен содержать @!");
-        } else if ((user.getLogin().isEmpty())||(user.getLogin().contains(" "))) {
+        } else if ((user.getLogin().equals(" "))||(user.getLogin().contains(" "))) {
             log.trace("ошибка login");
             throw new UserValidationException("Login не может быть пустым или с пробелами!");
         }  else if (user.getBirthday().isAfter(LocalDate.now())) {
