@@ -1,7 +1,6 @@
-package ru.yandex.practicum.filmorate.model;
+package java.filmorate.ru.yandex.practicum.model;
 
 import lombok.Data;
-import lombok.NonNull;
 
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;

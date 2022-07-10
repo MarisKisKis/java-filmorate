@@ -1,6 +1,5 @@
-package yandex.practicum.filmorate.model;
+package java.filmorate.ru.yandex.practicum.model;
 import lombok.Data;
-import lombok.NonNull;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
