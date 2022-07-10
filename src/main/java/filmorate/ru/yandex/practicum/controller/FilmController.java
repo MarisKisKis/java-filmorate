@@ -24,7 +24,7 @@ public class FilmController {
 
     @PostMapping
     public Film createFilm(@RequestBody Film film) throws FilmValidationException {
-        validateFilm(film);
+        validate(film);
         films.add(film);
         log.trace("Фильм добавлен, количество фильмов: ", films.size());
         return film;
@@ -53,7 +53,7 @@ public class FilmController {
 
     @PutMapping
     public Film updateFilm(@RequestBody Film film) throws FilmValidationException {
-        validateFilm(film);
+        validate(film);
         films.add(film);
         log.trace("Фильм обновлен");
         films.remove(0);
