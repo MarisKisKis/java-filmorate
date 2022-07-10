@@ -1,10 +1,10 @@
-package ru.yandex.practicum.filmorate.controller;
+package java.filmorate.ru.yandex.practicum.controller;
 
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.UserValidationException;
-import yandex.practicum.filmorate.model.User;
+import java.filmorate.ru.yandex.practicum.exception.UserValidationException;
+import java.filmorate.ru.yandex.practicum.model.User;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public class UserController {
         return user;
     }
 
-    public void validateUser(yandex.practicum.filmorate.model.User user) {
+    public void validateUser(User user) {
         if ((user.getEmail().equals(" "))||(!user.getEmail().contains("@")||(user.getEmail().contains(" ")))) {
             log.trace("ошибка e-mail");
             throw new UserValidationException("E-mail не может быть пустым, с пробелами и должен содержать @!");
@@ -52,7 +52,7 @@ public class UserController {
     }
 
     @PutMapping
-    yandex.practicum.filmorate.model.User updateUser(@RequestBody yandex.practicum.filmorate.model.User user) throws UserValidationException {
+    User updateUser(@RequestBody User user) throws UserValidationException {
         validateUser(user);
         users.add(user);
         log.trace("Пользователь обновлен");
