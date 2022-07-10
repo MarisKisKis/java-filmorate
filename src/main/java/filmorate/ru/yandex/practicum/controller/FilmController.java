@@ -30,7 +30,7 @@ public class FilmController {
         return film;
     }
 
-    public void validateFilm(Film film) {
+    public void validate(Film film) {
         if (film.getName().isEmpty()) {
             log.trace("ошибка названия!");
             throw new FilmValidationException("Название не может быть пустым!");
