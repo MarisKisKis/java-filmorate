@@ -1,4 +1,4 @@
-package java.filmorate.ru.yandex.practicum;
+package filmorate.ru.yandex.practicum;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

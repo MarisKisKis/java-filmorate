@@ -1,8 +1,8 @@
-package ru.yandex.practicum.filmorate;
+package filmorate.ru.yandex.practicum;
 
+import filmorate.ru.yandex.practicum.controller.FilmController;
+import filmorate.ru.yandex.practicum.model.Film;
 import org.junit.jupiter.api.Test;
-import java.filmorate.ru.yandex.practicum.controller.FilmController;
-import java.filmorate.ru.yandex.practicum.model.Film;
 
 import java.time.LocalDate;
 
