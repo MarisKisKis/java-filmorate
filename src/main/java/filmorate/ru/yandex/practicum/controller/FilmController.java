@@ -1,63 +1,63 @@
 package filmorate.ru.yandex.practicum.controller;
 
 import filmorate.ru.yandex.practicum.exception.FilmValidationException;
-import filmorate.ru.yandex.practicum.exception.UserValidationException;
 import filmorate.ru.yandex.practicum.model.Film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
 @Slf4j
 @RequestMapping("/films")
 public class FilmController {
-    private final List<Film> films = new ArrayList<>();
+    private final HashMap <Integer, Film> films = new HashMap<>();
+    private static Integer generatorId = 0;
 
     @GetMapping
-    public List<Film> findAllfilms() {
+    public Collection <Film> findAll() {
         log.trace("Текущее количество фильмов : {}", films.size());
-        return films;
+        return films.values();
     }
 
     @PostMapping
-    public Film createFilm(@RequestBody Film film) throws FilmValidationException {
+    public Film createFilm(@RequestBody Film film) {
         validate(film);
-        films.add(film);
-        log.trace("Фильм добавлен, количество фильмов: ", films.size());
+        int id = ++generatorId;
+        film.setId(id);
+        films.put(id, film);
+        log.trace("Фильм " + film.getName() + " добавлен");
         return film;
     }
 
     public void validate(Film film) {
         if (film.getName().isEmpty()) {
-            log.trace("ошибка названия!");
+            log.warn("Ошибка названия фильма " + film.getId()); //нецелесообразно вызывать в лог film.getName(),
+            // так как по условию имя пустое
             throw new FilmValidationException("Название не может быть пустым!");
         } else if (film.getDescription().length() > 200) {
-            log.trace("ошибка descriptiom");
+            log.warn("Ошибка descriptiom фильма " + film.getName());
             throw new FilmValidationException("Максимальная длина описания — 200 символов!");
         } else if ((film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28)))) {
-            log.trace("ошибка даты");
+            log.warn("Ошибка даты фильма " + film.getName());
             throw new FilmValidationException("Фильм не может быть раньше 28.12.1895");
         } else if (film.getDuration() <= 0) {
-            log.trace("ошибка длительности");
+            log.warn("Ошибка длительности фильма " + film.getName());
             throw new FilmValidationException("Длительность должна быть положительной");
         } else if (film.getId() < 0) {
-            log.trace("ошибка filmId");
-            throw new UserValidationException("Id не может быть меньше 0");
-        } else if (film.getId() == 0) {
-            film.setId(1);
+            log.warn("Ошибка Id фильма " + film.getName());
+            throw new FilmValidationException("Id не может быть меньше 0");
         }
     }
 
     @PutMapping
-    public Film updateFilm(@RequestBody Film film) throws FilmValidationException {
+    public Film updateFilm(@RequestBody Film film) {
         validate(film);
-        films.add(film);
-        log.trace("Фильм обновлен");
-        films.remove(0);
+        films.put(film.getId(), film);
+        log.trace("Фильм " + film.getName() + "обновлен");
         return film;
     }
-
 }
