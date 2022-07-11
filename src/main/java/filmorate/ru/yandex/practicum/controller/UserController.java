@@ -7,56 +7,57 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
 
 @RestController
 @Slf4j
 @RequestMapping("/users")
 public class UserController {
-    private final List<User> users = new ArrayList<>();
+    private final HashMap<Integer, User> users = new HashMap<>();
+    private static Integer generatorId = 0;
+
     @GetMapping
     public Collection<User> findAll() {
         log.trace("Текущее количество пользователей : {}", users.size());
-        return users;
+        return users.values();
     }
 
     @PostMapping
-    User createUser(@RequestBody User user) throws UserValidationException {
+    User createUser(@RequestBody User user) {
         validateUser(user);
-        users.add(user);
-        log.trace("Пользователь добавлен, количество пользователей ", users.size());
+        int id = ++generatorId;
+        user.setId(id);
+        users.put(id, user);
+        log.trace("Пользователь" + user.getName() + " добавлен");
         return user;
     }
 
     public void validateUser(User user) {
         if ((user.getEmail().equals(" "))||(!user.getEmail().contains("@")||(user.getEmail().contains(" ")))) {
-            log.trace("ошибка e-mail");
+            log.warn("Ошибка e-mail пользователя " + user.getLogin());
             throw new UserValidationException("E-mail не может быть пустым, с пробелами и должен содержать @!");
         } else if ((user.getLogin().equals(" "))||(user.getLogin().contains(" "))) {
-            log.trace("ошибка login");
+            log.warn("ошибка login пользователя " + user.getLogin());
             throw new UserValidationException("Login не может быть пустым или с пробелами!");
         }  else if (user.getBirthday().isAfter(LocalDate.now())) {
-            log.trace("ошибка birthday");
+            log.warn("ошибка birthday пользователя " + user.getLogin());
             throw new UserValidationException("Дата рождения не может быть в будущем!");
         } else if ((user.getName().isEmpty())||(user.getName().equals(" "))) {
             user.setName(user.getLogin());
-            log.trace("name = login");
+            log.warn("name = login  пользователя " + user.getLogin());
         } else if (user.getId() < 0) {
-            log.trace("ошибка userId");
+            log.warn("ошибка userId  пользователя " + user.getLogin()); // эта проверка нужна для прохождения тестов,
+            // которые ожидают ошибку при отрицательном id
             throw new UserValidationException("Id не может быть меньше 0");
-        } else if (user.getId() == 0) {
-            user.setId(1);
         }
     }
 
     @PutMapping
-    User updateUser(@RequestBody User user) throws UserValidationException {
+    User updateUser(@RequestBody User user) {
         validateUser(user);
-        users.add(user);
-        log.trace("Пользователь обновлен");
-        users.remove(0);
+        users.put(user.getId(), user);
+        log.trace("Пользователь " + user.getName() + "обновлен");
         return user;
     }
 }
