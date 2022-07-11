@@ -14,7 +14,7 @@ import java.util.HashMap;
 @Slf4j
 @RequestMapping("/users")
 public class UserController {
-    private final HashMap<Integer, User> users = new HashMap<>();
+    private final HashMap<Long, User> users = new HashMap<>();
     private static Integer generatorId = 0;
 
     @GetMapping
@@ -26,7 +26,7 @@ public class UserController {
     @PostMapping
     User createUser(@RequestBody User user) {
         validateUser(user);
-        int id = ++generatorId;
+        long id = ++generatorId;
         user.setId(id);
         users.put(id, user);
         log.trace("Пользователь" + user.getName() + " добавлен");
