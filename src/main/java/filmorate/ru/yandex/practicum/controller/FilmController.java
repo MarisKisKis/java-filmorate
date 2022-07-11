@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 @RequestMapping("/films")
 public class FilmController {
-    private final HashMap <Integer, Film> films = new HashMap<>();
+    private final HashMap <Long, Film> films = new HashMap<>();
     private static Integer generatorId = 0;
 
     @GetMapping
@@ -26,7 +26,7 @@ public class FilmController {
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
         validate(film);
-        int id = ++generatorId;
+        long id = ++generatorId;
         film.setId(id);
         films.put(id, film);
         log.trace("Фильм " + film.getName() + " добавлен");
