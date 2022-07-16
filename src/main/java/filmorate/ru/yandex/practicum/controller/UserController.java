@@ -78,7 +78,6 @@ public class UserController {
         } else if (user.getId() < 0) {
             log.warn("ошибка userId  пользователя " + user.getLogin()); // эта проверка нужна для прохождения тестов,
             // которые ожидают ошибку при отрицательном id
-           // throw new ValidationException("Id не может быть меньше 0");
             throw new NotFoundException("Нет такого пользователя");
         }
     }
