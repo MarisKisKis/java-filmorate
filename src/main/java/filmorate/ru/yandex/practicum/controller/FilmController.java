@@ -77,6 +77,7 @@ public class FilmController {
             throw new ValidationException("Длительность должна быть положительной");
         } else if (film.getId() < 0) {
             log.warn("Ошибка Id фильма " + film.getName());
+           // throw new ValidationException("Id не может быть меньше 0");
             throw new NotFoundException("Нет такого фильма");
         }
     }

@@ -51,8 +51,7 @@ public class FilmService {
     public Collection<Film> getTopFilms(long count){
         List<Film> films = (List<Film>) filmStorage.findAll();
         films.sort(Comparator.comparingInt((Film f) -> f.getLikes().size()));
-        Collection <Film> top10Films = filmStorage.findAll();
-                //new ArrayList<>((int) count);
+        Collection <Film> top10Films = new ArrayList<>((int) count);
         for (Film film : films) {
             top10Films.add(film);
         }
