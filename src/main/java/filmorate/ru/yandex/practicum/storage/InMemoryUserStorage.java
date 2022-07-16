@@ -1,13 +1,9 @@
 package filmorate.ru.yandex.practicum.storage;
 
-import filmorate.ru.yandex.practicum.exception.UserValidationException;
 import filmorate.ru.yandex.practicum.model.User;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
@@ -21,7 +17,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User saveUser(User user) {
-        validateUser(user);
         long id = ++generatorId;
         user.setId(id);
         users.put(id, user);
@@ -29,29 +24,13 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void validateUser(User user) {
-        if ((user.getEmail().equals(" "))||(!user.getEmail().contains("@")||(user.getEmail().contains(" ")))) {
-            throw new UserValidationException("E-mail не может быть пустым, с пробелами и должен содержать @!");
-        } else if ((user.getLogin().equals(" "))||(user.getLogin().contains(" "))) {
-            throw new UserValidationException("Login не может быть пустым или с пробелами!");
-        }  else if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new UserValidationException("Дата рождения не может быть в будущем!");
-        } else if ((user.getName().isEmpty())||(user.getName().equals(" "))) {
-            user.setName(user.getLogin());
-        } else if (user.getId() < 0) {
-            throw new UserValidationException("Id не может быть меньше 0");
-        }
-    }
-
-    @Override
     public User updateUser(User user) {
-        validateUser(user);
         users.put(user.getId(), user);
         return user;
     }
 
     @Override
-    public User getUser(int userId) {
+    public User getUser(long userId) {
         final User user = users.get(userId);
         return user;
     }
@@ -66,6 +45,15 @@ public class InMemoryUserStorage implements UserStorage {
     }
     public Set<Long> getAllFriendsIds (User user) {
         Set<Long> friends = user.getFriendIds();
+        return friends;
+    }
+    public Collection <User> getAllFriends (long userId) {
+        User user = getUser(userId);
+        Set<Long> friendsIds = user.getFriendIds();
+        Collection <User> friends = new ArrayList<>();
+        for (long i : friendsIds) {
+            friends.add(getUser((int) i));
+        }
         return friends;
     }
 }
