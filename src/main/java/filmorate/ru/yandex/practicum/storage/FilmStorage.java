@@ -5,6 +5,7 @@ import filmorate.ru.yandex.practicum.model.User;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.List;
 
 @Component
 public interface FilmStorage {
@@ -14,6 +15,4 @@ public interface FilmStorage {
     public Film getFilm (long filmId);
     public void addLike(Film film, User user);
     public void deleteLike(Film film, User user);
-
-
 }

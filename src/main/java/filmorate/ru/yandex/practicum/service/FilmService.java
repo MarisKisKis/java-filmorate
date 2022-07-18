@@ -48,14 +48,28 @@ public class FilmService {
         filmStorage.deleteLike(film, user);
     }
 
-    public Collection<Film> getTopFilms(long count){
-        List<Film> films = (List<Film>) filmStorage.findAll();
-        films.sort(Comparator.comparingInt((Film f) -> f.getLikes().size()));
-        Collection <Film> top10Films = new ArrayList<>((int) count);
-        for (Film film : films) {
-            top10Films.add(film);
+    public List<Film> getTopFilms(int count){
+        Collection <Film> films = filmStorage.findAll();
+        List<Film>topFilms1 = new ArrayList<>();
+        for (Film film1 : films) {
+            topFilms1.add(film1); // переносим объекты коллекции в список для применения сортировки
         }
-        return top10Films;
+        Collections.sort(topFilms1, new Comparator<Film>() {
+            @Override
+            public int compare(Film o1, Film o2) {
+                int result = Long.compare(o1.getLikes().size(), o2.getLikes().size()); // отсортировали
+                return result;
+            }
+        });
+        Collections.reverse(topFilms1);
+        List<Film> topFilms = new ArrayList<>();
+        if ((topFilms1.size() < 10)&&(count == 10)) { // проверили, если count не задан и фильмов меньше 10
+            count = topFilms1.size();
+        } else {
+            count = count; // вернули значение count, если он задан
+        }
+        topFilms = topFilms1.subList(0, count);
+        return topFilms;
     }
 
     public Collection<Film> findAllFilms() {

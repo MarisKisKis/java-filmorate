@@ -55,9 +55,9 @@ public class FilmController {
     public void deleteLike(@PathVariable long userId, @PathVariable long filmId) throws NotFoundException {
         filmService.deleteLike(userId, filmId);
     }
-
-    @GetMapping("/films/popular")
-    Collection<Film> getTopPopular(@RequestParam(defaultValue = "10") long count) throws NotFoundException {
+    @ResponseBody
+    @GetMapping("/popular")
+    Collection<Film> getTopPopular(@RequestParam(defaultValue = "10") int count) {
         log.info("Получили " + count + " самых популярных фильмов");
         return filmService.getTopFilms(count);
     }

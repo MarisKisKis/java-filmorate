@@ -8,11 +8,12 @@ import java.util.*;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
-    private final HashMap<Long, Film> films = new HashMap<>();
+    final HashMap<Long, Film> films = new HashMap<>();
     private static Integer generatorId = 0;
 
     @Override
     public Collection<Film> findAll() {
+
         return films.values();
     }
 
