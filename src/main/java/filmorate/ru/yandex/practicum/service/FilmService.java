@@ -12,10 +12,15 @@ import java.util.*;
 
 @Service
 public class FilmService {
+
+    private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
+
     @Autowired
-    UserStorage userStorage;
-    @Autowired
-    FilmStorage filmStorage;
+    public FilmService (UserStorage userStorage, FilmStorage filmStorage) {
+        this.userStorage = userStorage;
+        this.filmStorage = filmStorage;
+    }
 
     public Film getFilm(long filmId) throws NotFoundException {
         if (filmId < 0) {
@@ -24,6 +29,7 @@ public class FilmService {
         final Film film = filmStorage.getFilm(filmId);
         return film;
     }
+
     public void addLike(long userId, long filmId) throws NotFoundException {
         User user = userStorage.getUser(userId);
         Film film = filmStorage.getFilm(filmId);
@@ -48,9 +54,9 @@ public class FilmService {
         filmStorage.deleteLike(film, user);
     }
 
-    public List<Film> getTopFilms(int count){
-        Collection <Film> films = filmStorage.findAll();
-        List<Film>topFilms1 = new ArrayList<>();
+    public List<Film> getTopFilms(int count) {
+        Collection<Film> films = filmStorage.findAll();
+        List<Film> topFilms1 = new ArrayList<>();
         for (Film film1 : films) {
             topFilms1.add(film1); // переносим объекты коллекции в список для применения сортировки
         }
@@ -63,7 +69,7 @@ public class FilmService {
         });
         Collections.reverse(topFilms1);
         List<Film> topFilms = new ArrayList<>();
-        if ((topFilms1.size() < 10)&&(count == 10)) { // проверили, если count не задан и фильмов меньше 10
+        if ((topFilms1.size() < 10) && (count == 10)) { // проверили, если count не задан и фильмов меньше 10
             count = topFilms1.size();
         } else {
             count = count; // вернули значение count, если он задан
@@ -73,7 +79,7 @@ public class FilmService {
     }
 
     public Collection<Film> findAllFilms() {
-        Collection <Film> allFilms;
+        Collection<Film> allFilms;
         allFilms = filmStorage.findAll();
         return allFilms;
     }

@@ -11,8 +11,13 @@ import java.util.HashSet;
 
 @Service
 public class UserService {
+
+    private final UserStorage userStorage;
+
     @Autowired
-    UserStorage userStorage;
+    public UserService (UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     public User getUser(long userId) throws NotFoundException {
         final User user = userStorage.getUser(userId);

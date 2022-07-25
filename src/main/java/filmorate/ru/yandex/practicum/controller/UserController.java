@@ -5,6 +5,7 @@ import filmorate.ru.yandex.practicum.exception.NotFoundException;
 import filmorate.ru.yandex.practicum.exception.ValidationException;
 import filmorate.ru.yandex.practicum.model.User;
 import filmorate.ru.yandex.practicum.service.UserService;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +17,12 @@ import java.util.Collection;
 @Slf4j
 @RequestMapping("/users")
 public class UserController {
+
+    private final UserService userService;
     @Autowired
-    UserService userService;
+    public UserController (UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
     public Collection<User> findAll() {
@@ -25,44 +30,55 @@ public class UserController {
         return userService.findAll();
     }
 
+    @SneakyThrows
     @PostMapping
-    User createUser(@RequestBody User user) throws NotFoundException {
+    User createUser(@RequestBody User user) {
         validateUser(user);
         userService.save(user);
         log.trace("Пользователь" + user.getName() + " добавлен");
         return user;
     }
 
+    @SneakyThrows
     @PutMapping
-    User updateUser(@RequestBody User user) throws NotFoundException {
+    User updateUser(@RequestBody User user) {
         validateUser(user);
         userService.updateUser(user);
         log.trace("Пользователь " + user.getName() + "обновлен");
         return user;
     }
+
+    @SneakyThrows
     @GetMapping("/{userId}")
-    User getUser(@PathVariable long userId) throws NotFoundException {
+    User getUser(@PathVariable long userId) {
         log.info("Получили пользователя по id ", userId);
         return userService.getUser(userId);
     }
+
     @GetMapping("/{userId}/friends")
     public Collection<User> getAllFriends(@PathVariable long userId) {
         return userService.getAllFriends(userId);
     }
+
+    @SneakyThrows
     @GetMapping("/{userId}/friends/common/{friendId}")
-    public Collection<User> getCommonFriends(@PathVariable long userId, @PathVariable long friendId) throws NotFoundException {
+    public Collection<User> getCommonFriends(@PathVariable long userId, @PathVariable long friendId) {
         return userService.getCommonFriends(userId, friendId);
     }
+
+    @SneakyThrows
     @PutMapping("/{userId}/friends/{friendId}")
-    public void addFriend(@PathVariable long userId, @PathVariable long friendId) throws NotFoundException {
+    public void addFriend(@PathVariable long userId, @PathVariable long friendId) {
         userService.addFriend(userId, friendId);
     }
 
+    @SneakyThrows
     @DeleteMapping("/{userId}/friends/{friendId}")
-    public void deleteFriend(@PathVariable long userId, @PathVariable long friendId) throws NotFoundException {
+    public void deleteFriend(@PathVariable long userId, @PathVariable long friendId) {
         userService.deleteFriend(userId, friendId);
     }
-    public void validateUser(User user) throws NotFoundException {
+
+    public void validateUser(User user) {
         if ((user.getEmail().equals(" "))||(!user.getEmail().contains("@")||(user.getEmail().contains(" ")))) {
             log.warn("Ошибка e-mail пользователя " + user.getLogin());
             throw new ValidationException("E-mail не может быть пустым, с пробелами и должен содержать @!");
@@ -79,7 +95,11 @@ public class UserController {
             log.warn("ошибка userId  пользователя " + user.getLogin()); // эта проверка нужна для прохождения тестов,
             // которые ожидают ошибку при отрицательном id
            // throw new ValidationException("Id не может быть меньше 0");
-            throw new NotFoundException("Нет такого пользователя");
+            try {
+                throw new NotFoundException("Нет такого пользователя");
+            } catch (NotFoundException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
