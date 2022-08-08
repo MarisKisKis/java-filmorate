@@ -17,5 +17,5 @@ public class Film {
     private LocalDate releaseDate;
     private int duration;
     @JsonIgnore
-    Set<Long> likes = new HashSet<>();
+    private Set<Long> likes = new HashSet<>();
 }
