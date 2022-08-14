@@ -2,23 +2,18 @@ package filmorate.ru.yandex.practicum.storage;
 
 import filmorate.ru.yandex.practicum.model.User;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.Optional;
 
 @Component
 public interface UserStorage {
-    public Collection<User> findAll();
-    User saveUser(User user);
-    User updateUser(User user);
-
-    public User getUser(long userId);
-
-    void addFriend(User user, User friend);
-
-    void deleteFriend(User user, User friend);
-
-    public Set<Long> getAllFriendsIds (User user);
-    public Collection <User> getAllFriends (long userId);
+    public Optional<User> findAll();
+    public Optional<User> findUserById(long id);
+    public Optional<User> createUser(User user);
+    public Optional<User> updateUser(User user);
+    void addFriend(Optional<User> user, Optional<User> friend, long friendshipId);
+    void deleteFriend(long friendshipId);
+    public long findFriendshipId(long userId, long friendId);
+    public Optional<User> getAllFriends (long userId);
+    public Optional<User> getCommonFriends(long userId, long friendId);
 }

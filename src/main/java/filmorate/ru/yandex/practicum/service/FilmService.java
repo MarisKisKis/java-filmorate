@@ -15,6 +15,7 @@ public class FilmService {
 
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private long generatorId;
 
     @Autowired
     public FilmService (UserStorage userStorage, FilmStorage filmStorage) {
@@ -22,40 +23,50 @@ public class FilmService {
         this.filmStorage = filmStorage;
     }
 
-    public Film getFilm(long filmId) throws NotFoundException {
+    public Optional<Film> findAllFilms() {
+        Optional<Film> allFilms;
+        allFilms = filmStorage.findAll();
+        return allFilms;
+    }
+
+    public Optional<Film> getFilm(long filmId) throws NotFoundException {
         if (filmId < 0) {
             throw new NotFoundException("Не найден фильм с id" + filmId);
         }
-        final Film film = filmStorage.getFilm(filmId);
+        final Optional<Film> film = filmStorage.findFilmById(filmId);
         return film;
     }
 
     public void addLike(long userId, long filmId) throws NotFoundException {
-        User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId);
+        Optional<User> user = userStorage.findUserById(userId);
+        Optional<Film> film = filmStorage.findFilmById(filmId);
+        long likenessId = 0;
+        likenessId = generatorId++;
         if (user == null) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
         if (film == null) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        filmStorage.addLike(film, user);
+        filmStorage.addLike(film, user, likenessId);
     }
 
     public void deleteLike(long userId, long filmId) throws NotFoundException {
-        User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId);
+        Optional<User> user = userStorage.findUserById(userId);
+        Optional<Film> film = filmStorage.findFilmById(filmId);
+        long likenessId = filmStorage.findLikenessId(userId, filmId);
         if (user == null) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
         if (film == null) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        filmStorage.deleteLike(film, user);
+        filmStorage.deleteLike(likenessId);
     }
 
+
     public List<Film> getTopFilms(int count) {
-        Collection<Film> films = filmStorage.findAll();
+        Optional<Film> films = filmStorage.findAll();
         List<Film> topFilms1 = new ArrayList<>();
         for (Film film1 : films) {
             topFilms1.add(film1); // переносим объекты коллекции в список для применения сортировки
@@ -78,13 +89,9 @@ public class FilmService {
         return topFilms;
     }
 
-    public Collection<Film> findAllFilms() {
-        Collection<Film> allFilms;
-        allFilms = filmStorage.findAll();
-        return allFilms;
-    }
+     */
 
-    public Film save(Film film) {
+    public Optional<Film> save(Film film) {
         return filmStorage.saveFilm(film);
     }
 

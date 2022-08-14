@@ -4,15 +4,15 @@ import filmorate.ru.yandex.practicum.model.Film;
 import filmorate.ru.yandex.practicum.model.User;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Optional;
 
 @Component
 public interface FilmStorage {
-    public Collection<Film> findAll();
-    public Film saveFilm(Film film);
-    public Film updateFilm(Film film);
-    public Film getFilm (long filmId);
-    public void addLike(Film film, User user);
-    public void deleteLike(Film film, User user);
+    public Optional<Film> findAll();
+    public Optional<Film> findFilmById(long id);
+    public Optional<Film> saveFilm(Film film);
+    public Optional<Film> updateFilm(Film film);
+    public void addLike(Optional<Film> film, Optional<User> user, long likenessId);
+    public void deleteLike(long likenessId);
+    public long findLikenessId(long userId, long filmId);
 }

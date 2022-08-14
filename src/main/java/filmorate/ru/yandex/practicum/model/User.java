@@ -4,7 +4,7 @@ import lombok.Data;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import java.time.LocalDate;
+import java.sql.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,7 +16,16 @@ public class User {
     @NotBlank
     private String login;
     private String name;
-    private LocalDate birthday;
+    private Date birthday;
+    private boolean isMutionalFriend;
+    private boolean isNotMutionalFriend;
     @JsonIgnore
     private Set<Long> friendIds = new HashSet<>();
+
+    public User(long user_id, String login, String name, Date birthday) {
+        this.id = user_id;
+        this.login = login;
+        this.name = name;
+        this.birthday = birthday;
+    }
 }
