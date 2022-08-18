@@ -11,9 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -28,7 +27,7 @@ public class UserController {
     }
 
     @GetMapping
-    public Optional<User> findAll() {
+    public List<User> findAll() {
         log.trace("Текущее количество пользователей : {}", userService.findAll());
         return userService.findAll();
     }
@@ -53,23 +52,28 @@ public class UserController {
 
     @SneakyThrows
     @GetMapping("/{userId}")
-    public Optional<User> getUser(@PathVariable long userId) {
+    public User getUser(@PathVariable long userId) {
         log.info("Получили пользователя по id ", userId);
         return userService.getUser(userId);
     }
 
 
     @GetMapping("/{userId}/friends")
-    public Optional<User> getAllFriends(@PathVariable long userId) {
+    public List<User> getAllFriends(@PathVariable long userId) {
         return userService.getAllFriends(userId);
     }
 
     @SneakyThrows
     @GetMapping("/{userId}/friends/common/{friendId}")
-    public Optional<User> getCommonFriends(@PathVariable long userId, @PathVariable long friendId) {
+    public List<User> getCommonFriends(@PathVariable long userId, @PathVariable long friendId) {
         return userService.getCommonFriends(userId, friendId);
     }
 
+    @SneakyThrows
+    @GetMapping("/{userId}/friends/{friendId}")
+    public List<User> getMutualFriend(@PathVariable long userId, @PathVariable long friendId) {
+        return userService.getMutualFriends(userId, friendId);
+    }
     @SneakyThrows
     @PutMapping("/{userId}/friends/{friendId}")
     public void addFriend(@PathVariable long userId, @PathVariable long friendId) {
@@ -90,7 +94,7 @@ public class UserController {
         } else if ((user.getLogin().equals(" "))||(user.getLogin().contains(" "))) {
             log.warn("ошибка login пользователя " + user.getLogin());
             throw new ValidationException("Login не может быть пустым или с пробелами!");
-        }  else if (user.getBirthday().after(Date.from(Instant.now()))) {
+        } else if (user.getBirthday().after(Date.from(Instant.now()))) {
             log.warn("ошибка birthday пользователя " + user.getLogin());
             throw new ValidationException("Дата рождения не может быть в будущем!");
         } else if ((user.getName().isEmpty())||(user.getName().equals(" "))) {

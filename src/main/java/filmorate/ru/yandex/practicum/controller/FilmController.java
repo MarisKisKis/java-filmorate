@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @RestController
 @Slf4j
@@ -30,13 +32,12 @@ public class FilmController {
     }
 
     @GetMapping
-    public Optional<Film> findAll() {
+    public List<Film> findAll() {
         log.trace("Текущее количество фильмов : {}", filmService.findAllFilms());
         return filmService.findAllFilms();
     }
 
-    @SneakyThrows // как вариант, или лучше в try-catch? лучше оставить валидацию на уровне контроллера, но idea требует
-    // обознначить исключение
+    @SneakyThrows
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
         validate(film);
@@ -55,7 +56,7 @@ public class FilmController {
     }
     @SneakyThrows
     @GetMapping("/{filmId}")
-    Optional<Film> getFilm(@PathVariable long filmId) {
+    Film getFilm(@PathVariable long filmId) {
         log.info("Получили фильм по id ", filmId);
         return filmService.getFilm(filmId);
     }
@@ -72,11 +73,38 @@ public class FilmController {
     }
     @ResponseBody
     @GetMapping("/popular")
-    Collection<Film> getTopPopular(@RequestParam(defaultValue = "10") int count) {
+    List<Film> getTopPopular(@RequestParam(defaultValue = "10") int count) {
         log.info("Получили " + count + " самых популярных фильмов");
         return filmService.getTopFilms(count);
     }
 
+     @ResponseBody
+    @GetMapping("/genres")
+    List<String> getAllGenres() {
+        log.info("Получили все жанры");
+        return filmService.getAllGenres();
+    }
+
+    @ResponseBody
+    @GetMapping("/genres/{filmId}")
+    String getGenreById(int genreId) {
+        log.info("Получили жанр под id {}", genreId);
+        return filmService.findGenreById(genreId);
+    }
+
+    @ResponseBody
+    @GetMapping("/mpa")
+    List<String> getAllMpa() {
+        log.info("Получили все рейтинги");
+        return filmService.getAllMpa();
+    }
+
+    @ResponseBody
+    @GetMapping("/mpa/{ratingId}")
+    String getMpaById(int ratingId) {
+        log.info("Получили mpa под id {}", ratingId);
+        return filmService.findMpaById(ratingId);
+    }
 
     public void validate(Film film) {
         if (film.getName().isEmpty()) {
@@ -86,7 +114,7 @@ public class FilmController {
         } else if (film.getDescription().length() > 200) {
             log.warn("Ошибка descriptiom фильма " + film.getName());
             throw new ValidationException("Максимальная длина описания — 200 символов!");
-        } else if ((film.getReleaseDate().before(new Date(1895, 12, 28)))) {
+        } else if ((film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28)))) {
             log.warn("Ошибка даты фильма " + film.getName());
             throw new ValidationException("Фильм не может быть раньше 28.12.1895");
         } else if (film.getDuration() <= 0) {

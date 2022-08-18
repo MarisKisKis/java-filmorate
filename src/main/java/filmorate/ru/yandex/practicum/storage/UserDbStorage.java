@@ -6,9 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 
+import java.sql.PreparedStatement;
 import java.util.*;
 
 @Component
@@ -24,167 +27,118 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public Optional<User> findAll() {
+    public List<Integer> findAll() {
+        ArrayList<Integer> users = new ArrayList<>();
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select id from users ");
+            while(userRows.next()) {
+                users.add(userRows.getInt("id"));
+            }
+        return users;
+    }
+
+    @Override
+    public User findUserById(long id) {
         // выполняем запрос к базе данных.
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users ");
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users where id = ?", id);
 
         // обрабатываем результат выполнения запроса
         if (userRows.next()) {
             User user = new User(
-                    userRows.getLong("user_id"),
+                    userRows.getLong("id"),
                     userRows.getString("login"),
                     userRows.getString("name"),
+                    userRows.getString("email"),
                     userRows.getDate("birthday"));
 
             log.info("Найден пользователь: {} {}", user.getId(), user.getName());
 
-            return Optional.of(user);
+            return user;
         } else {
             log.info("Пользователи с идентификатором не найдены.");
-            return Optional.empty();
+            return null;
         }
     }
 
     @Override
-    public Optional<User> findUserById(long id) {
-        // выполняем запрос к базе данных.
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users where user_id = ?", id);
-
-        // обрабатываем результат выполнения запроса
-        if (userRows.next()) {
-            User user = new User(
-                    userRows.getLong("user_id"),
-                    userRows.getString("login"),
-                    userRows.getString("name"),
-                    userRows.getDate("birthday"));
-
-            log.info("Найден пользователь: {} {}", user.getId(), user.getName());
-
-            return Optional.of(user);
-        } else {
-            log.info("Пользователи с идентификатором не найдены.");
-            return Optional.empty();
-        }
+    public User createUser(User user) {
+        String userRows = "insert into users (login, name, EMAIL, birthday)" +
+                " VALUES ( ?, ?, ?, ?)";
+        KeyHolder kh = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement pst = connection.prepareStatement(userRows, new String[]{"id"});
+            pst.setString(1, user.getLogin());
+            pst.setString(2, user.getName());
+            pst.setString(3, user.getEmail());
+            pst.setDate(4, user.getBirthday());
+            return pst;
+        }, kh);
+        user.setId(kh.getKey().longValue());
+        return user;
     }
 
     @Override
-    public Optional<User> createUser(User user) {
-        // выполняем запрос к базе данных.
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("insert into users (login, name, birthday)" +
-                " VALUES (?, ?, ?) ON CONFLICT DO NOTHING", user.getLogin(), user.getName(), user.getBirthday());
-
-        // обрабатываем результат выполнения запроса
-        if (userRows.next()) {
-             user = new User(
-                    userRows.getLong("user_id"),
-                    userRows.getString("login"),
-                    userRows.getString("name"),
-                    userRows.getDate("birthday"));
-
-            log.info("Добавлен пользователь: {} {}", user.getId(), user.getName());
-
-            return Optional.of(user);
-        } else {
-            log.info("Ошибка добавления");
-            return Optional.empty();
-        }
-    }
-
-    @Override
-    public Optional<User> updateUser(User user) {
-        // выполняем запрос к базе данных.
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("update users set login=? where user_id = ?",
-                user.getLogin(), user.getId());
-
-        // обрабатываем результат выполнения запроса
-        if (userRows.next()) {
-            user = new User(
-                    userRows.getLong("user_id"),
-                    userRows.getString("login"),
-                    userRows.getString("name"),
-                    userRows.getDate("birthday"));
-
-            log.info("Обновлен пользователь: {} {}", user.getId(), user.getName());
-
-            return Optional.of(user);
-        } else {
-            log.info("Ошибка добавления");
-            return Optional.empty();
-        }
+    public User updateUser(User user) {
+        String userRows = "update users set login=?,  name=?, EMAIL=?, BIRTHDAY=? " +
+                " where id = ?";
+         jdbcTemplate.update(userRows,
+                user.getLogin(), user.getName(), user.getEmail(), user.getBirthday(), user.getId());
+         return user;
     }
 
 
-    public void addFriend(Optional<User> user, Optional<User> friend, long friendshipId) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("update MUTUAL_FRIENDS set FRIENDSHIP_ID=?" +
-                "where user_id = ? and friend_id = ?", friendshipId, user.get().getId(), friend.get().getId());
-        if (userRows.next()) {
-            user = Optional.of(new User(
-                    userRows.getLong("user_id"),
-                    userRows.getString("login"),
-                    userRows.getString("name"),
-                    userRows.getDate("birthday")));
+    public void addFriend(long userId, long friendId) {
 
-            log.info("Обновлен пользователь: {} {}", user.get().getId(), user.get().getName());
-
-        } else {
-            log.info("Ошибка добавления");
-        }
+        String userRows = "insert into MUTUAL_FRIENDS (user_id, friend_id) VALUES (?, ?)";
+        KeyHolder kh = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement pst = connection.prepareStatement(userRows, new String[]{"friendship_id"});
+            pst.setLong(1, userId);
+            pst.setLong(2, friendId);
+            return pst;
+        }, kh);
     }
 
-    public void deleteFriend(long friendshipId) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("delete from MUTUAL_FRIENDS where FRIENDSHIP_ID=?",
-                friendshipId);
-        if (userRows.next()) {
-            log.info("Друг удален");
-        } else {
-            log.info("Ошибка добавления");
-        }
+    public void deleteFriend(long userId, long friendId) {
+        String friendSql = "DELETE FROM MUTUAL_FRIENDS where user_id=? and friend_id=?";
+        jdbcTemplate.update(connection -> {
+            PreparedStatement pst = connection.prepareStatement(friendSql, new String[]{"friendship_id"});
+            pst.setLong(1, userId);
+            pst.setLong(2, friendId);
+            int rowsDeleted = pst.executeUpdate();
+            if (rowsDeleted > 0) {
+                System.out.println("A user was deleted successfully!");
+            }
+            return pst;
+        });
     }
 
-    public long findFriendshipId(long userId, long friendId) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from MUTUAL_FRIENDS where user_id=? and friend_id=?",
-                userId, friendId);
-        if (userRows.next()) {
-            log.info("Дружба найдена");
-            return userRows.getLong("friendship_id");
-        } else {
-            log.info("Ошибка добавления");
-            return 0;
+    public List<Integer> getAllFriends(long userId) {
+        ArrayList<Integer> allFriendsIds = new ArrayList<>();
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select friend_id from MUTUAL_FRIENDS where user_id=?", userId);
+        while (userRows.next()) {
+            allFriendsIds.add(userRows.getInt("friend_id"));
         }
+        return allFriendsIds;
     }
-    public Optional<User> getAllFriends (long userId) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users MUTUAL_FRIENDS where user_id=?", userId);
+
+    public List<Integer> getMutualFriends(long userId, long friendId) {
+        ArrayList<Integer> commonIds = new ArrayList<>();
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select FRIENDSHIP_ID from MUTUAL_FRIENDS where user_id=? " +
+                "and friend_id=?", userId, friendId);
         if (userRows.next()) {
-            User user = new User(
-                    userRows.getLong("user_id"),
-                    userRows.getString("login"),
-                    userRows.getString("name"),
-                    userRows.getDate("birthday"));
-
-            log.info("Найден пользователь: {} {}", user.getId(), user.getName());
-
-            return Optional.of(user);
-        } else {
-            log.info("Пользователи с идентификатором не найдены.");
-            return Optional.empty();
+            commonIds.add(userRows.getInt("friendship_id"));
         }
+        return commonIds;
     }
-    public Optional<User> getCommonFriends(long userId, long friendId) {
-        SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from MUTUAL_FRIENDS where user_id=? and friend_id=?", userId, friendId);
-        // обрабатываем результат выполнения запроса
-        if (userRows.next()) {
-            User user = new User(
-                    userRows.getLong("user_id"),
-                    userRows.getString("login"),
-                    userRows.getString("name"),
-                    userRows.getDate("birthday"));
 
-            log.info("Найден пользователь: {} {}", user.getId(), user.getName());
-
-            return Optional.of(user);
-        } else {
-            log.info("Пользователи с идентификатором не найдены.");
-            return Optional.empty();
+    public List<Integer> getCommonFriends(long userId, long friendId) {
+        ArrayList<Integer> commonIds = new ArrayList<>();
+        SqlRowSet userRows = jdbcTemplate.queryForRowSet("SELECT distinct (m.FRIEND_id) " +
+                "from MUTUAL_FRIENDS as m inner JOIN (SELECT m.FRIEND_id from MUTUAL_FRIENDS as m where user_id = ?) " +
+                "on m.friend_ID = m.FRIEND_ID where USER_ID=?", userId, friendId);
+        while (userRows.next()) {
+            commonIds.add(userRows.getInt("friend_id"));
         }
+        return commonIds;
     }
 }

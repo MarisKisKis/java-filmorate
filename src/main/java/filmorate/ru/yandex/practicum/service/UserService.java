@@ -7,8 +7,8 @@ import filmorate.ru.yandex.practicum.storage.UserStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -16,71 +16,84 @@ public class UserService {
 
     private final UserDbStorage userDbStorage;
     private final UserStorage userStorage;
-    private long generatorId;
 
     @Autowired UserService(UserDbStorage userDbStorage, UserStorage userStorage) {
         this.userDbStorage = userDbStorage;
         this.userStorage = userStorage;
     }
 
-    public Optional<User> getUser(long userId) throws NotFoundException {
-        final Optional<User> user = userStorage.findUserById(userId);
-        if (user == null) {
+    public User getUser(long userId) throws NotFoundException {
+        if (userId <= 0) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
+        User user = userStorage.findUserById(userId);
         return userDbStorage.findUserById(userId);
     }
 
-    public Optional<User> save(User user) {
-        return userStorage.createUser(user);
+    public User save(User user) {
+          return userStorage.createUser(user);
     }
 
     public void addFriend(long userId, long friendId) throws NotFoundException {
-        Optional<User> user = userStorage.findUserById(userId);
-        Optional<User> friend = userStorage.findUserById(friendId);
-        long friendshipId = 0;
-        friendshipId = generatorId++;
-        if (user == null) {
+        if (userId <= 0) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
-        if (friend == null) {
+        if (friendId <= 0) {
             throw new NotFoundException("Друг с id " + friendId + " не найден");
         }
-        userStorage.addFriend(user, friend, friendshipId);
+        userStorage.addFriend(userId, friendId);
     }
 
     public void deleteFriend(long userId, long friendId) throws NotFoundException {
-        Optional<User> user = userStorage.findUserById(userId);
-        Optional<User> friend = userStorage.findUserById(friendId);
-        long friendshipId = userStorage.findFriendshipId(userId, friendId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id" + userId + " не найден");
+        if (userId <= 0) {
+            throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        } if (friendId <= 0) {
+            throw new NotFoundException("Фильм с id " + friendId + " не найден");
         }
-        if (friend == null) {
-            throw new NotFoundException("Друг с id" + friendId + " не найден");
-        }
-        userStorage.deleteFriend(friendshipId);
+        userStorage.deleteFriend(userId, friendId);
     }
-    public Optional<User> getAllFriends(long userId){
-        Optional<User> user = userStorage.findUserById(userId);
-        Optional<User> allFriends = userStorage.getAllFriends(userId);
+    public List<User> getAllFriends(long userId){
+        List<Integer> allFriendsids = userStorage.getAllFriends(userId);
+        List<User> allFriends = new ArrayList<>();
+        for (int i = 0; i < allFriendsids.size(); i++) {
+            allFriends.add(userStorage.findUserById(allFriendsids.get(i)));
+        }
         return allFriends;
     }
-    public Optional<User> getCommonFriends(long userId, long friendId) throws NotFoundException {
-        Optional<User> commonFriends = userStorage.getCommonFriends(userId, friendId);
+    public List<User> getCommonFriends(long userId, long friendId) throws NotFoundException {
+        List<Integer> commonIds = userStorage.getCommonFriends(userId, friendId);
+        List<User> commonFriends = new ArrayList<>();
+        for (int i = 0; i < commonIds.size(); i++) {
+            commonFriends.add(userStorage.findUserById(commonIds.get(i)));
+        }
         return commonFriends;
     }
 
-    public Optional<User> findAll() {
-        Optional<User> allUsers;
-        allUsers = userStorage.findAll();
+    public List<User> getMutualFriends(long userId, long friendId) throws NotFoundException {
+        List<Integer> mutualIds = userStorage.getMutualFriends(userId, friendId);
+        List<User> mutualFriends = new ArrayList<>();
+        for (int i = 0; i < mutualIds.size(); i++) {
+            mutualFriends.add(userStorage.findUserById(mutualIds.get(i)));
+        }
+        return mutualFriends;
+    }
+
+    public List<User> findAll() {
+        List<Integer> allUsersIds;
+        allUsersIds = userStorage.findAll();
+        ArrayList<User> allUsers = new ArrayList<>();
+        for (int i = 0; i < allUsersIds.size(); i++) {
+            allUsers.add(userStorage.findUserById(allUsersIds.get(i)));
+        }
         return allUsers;
     }
 
-    public void updateUser(User user) throws NotFoundException {
+    public User updateUser(User user) throws NotFoundException {
         if (user == null) {
-            throw new NotFoundException("Пользователь с id " + user.getLogin() + " не найден");
+            throw new NotFoundException("Пользователь с id " + user.getId() + " не найден");
+      } else {
+            userStorage.updateUser(user);
         }
-        userStorage.updateUser(user);
+        return user;
     }
 }

@@ -1,7 +1,11 @@
 package filmorate.ru.yandex.practicum.exception;
 
-public class NotFoundException extends Throwable {
+public class NotFoundException extends RuntimeException {
+    public NotFoundException() {
+
+    }
      public NotFoundException(String message) {
         super(message);
     }
+
 }

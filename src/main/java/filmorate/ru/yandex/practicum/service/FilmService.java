@@ -9,13 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 public class FilmService {
 
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
-    private long generatorId;
 
     @Autowired
     public FilmService (UserStorage userStorage, FilmStorage filmStorage) {
@@ -23,82 +23,86 @@ public class FilmService {
         this.filmStorage = filmStorage;
     }
 
-    public Optional<Film> findAllFilms() {
-        Optional<Film> allFilms;
-        allFilms = filmStorage.findAll();
+    public List<Film> findAllFilms() {
+        List<Integer> allFilmIds = filmStorage.findAll();
+        List<Film> allFilms = new ArrayList<>();
+        for (int i = 0; i < allFilmIds.size(); i++) {
+            allFilms.add(filmStorage.findFilmById(allFilmIds.get(i)));
+        }
         return allFilms;
     }
 
-    public Optional<Film> getFilm(long filmId) throws NotFoundException {
+    public Film getFilm(long filmId) throws NotFoundException {
         if (filmId < 0) {
             throw new NotFoundException("Не найден фильм с id" + filmId);
         }
-        final Optional<Film> film = filmStorage.findFilmById(filmId);
+        Film film = filmStorage.findFilmById(filmId);
         return film;
     }
 
     public void addLike(long userId, long filmId) throws NotFoundException {
-        Optional<User> user = userStorage.findUserById(userId);
-        Optional<Film> film = filmStorage.findFilmById(filmId);
-        long likenessId = 0;
-        likenessId = generatorId++;
+        User user = userStorage.findUserById(userId);
+        Film film = filmStorage.findFilmById(filmId);
         if (user == null) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
         if (film == null) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        filmStorage.addLike(film, user, likenessId);
+        filmStorage.addLike(userId, filmId);
     }
 
     public void deleteLike(long userId, long filmId) throws NotFoundException {
-        Optional<User> user = userStorage.findUserById(userId);
-        Optional<Film> film = filmStorage.findFilmById(filmId);
-        long likenessId = filmStorage.findLikenessId(userId, filmId);
-        if (user == null) {
+        if (userId <= 0) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
-        }
-        if (film == null) {
+        } if (filmId <= 0) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        filmStorage.deleteLike(likenessId);
+        filmStorage.deleteLike(userId, filmId);
     }
 
 
     public List<Film> getTopFilms(int count) {
-        Optional<Film> films = filmStorage.findAll();
-        List<Film> topFilms1 = new ArrayList<>();
-        for (Film film1 : films) {
-            topFilms1.add(film1); // переносим объекты коллекции в список для применения сортировки
-        }
-        Collections.sort(topFilms1, new Comparator<Film>() {
-            @Override
-            public int compare(Film o1, Film o2) {
-                int result = Long.compare(o1.getLikes().size(), o2.getLikes().size()); // отсортировали
-                return result;
-            }
-        });
-        Collections.reverse(topFilms1);
-        List<Film> topFilms = new ArrayList<>();
-        if ((topFilms1.size() < 10) && (count == 10)) { // проверили, если count не задан и фильмов меньше 10
-            count = topFilms1.size();
+        List<Integer> top10FilmsIds = filmStorage.getTopFilms();
+        if ((top10FilmsIds.size() < 10) && (count == 10)) {
+            count = top10FilmsIds.size();
         } else {
-            count = count; // вернули значение count, если он задан
+            count = count;
         }
-        topFilms = topFilms1.subList(0, count);
-        return topFilms;
+        List<Film> topCountFilms = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            topCountFilms.add(filmStorage.findFilmById(top10FilmsIds.get(i)));
+        }
+
+        return topCountFilms;
     }
 
-     */
-
-    public Optional<Film> save(Film film) {
+    public Film save(Film film) {
         return filmStorage.saveFilm(film);
     }
 
     public void updateFilm(Film film) throws NotFoundException {
         if (film == null) {
-            throw new NotFoundException("Фильм с id " + film + " не найден");
+            throw new NotFoundException("Фильм" + film + " не найден");
         }
         filmStorage.updateFilm(film);
+    }
+
+    public List<String> getAllGenres() {
+       return filmStorage.getAllGenres();
+    }
+
+    public String findGenreById(int genreId) {
+        String genre = filmStorage.findGenreById(genreId);
+        return genre;
+    }
+
+    public List<String> getAllMpa() {
+        return filmStorage.getAllMpa();
+    }
+
+    public String findMpaById(int ratingId) {
+        String mpa = filmStorage.findMpaById(ratingId);
+        return mpa;
     }
 }
