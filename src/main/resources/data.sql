@@ -1,4 +1,5 @@
---insert into USERS (LOGIN, NAME, EMAIL, BIRTHDAY) VALUES ( 'Kitty', 'Mary', 'kit@ya', '2000-09-09' )
+insert into USERS (LOGIN, NAME, EMAIL, BIRTHDAY) VALUES ( 'Kitty', 'Mary', 'kit@ya', '2000-09-09' )
+delete from USERS;
 
 insert into rating (rating_id, RATING_NAME)
 values (1, 'G');
