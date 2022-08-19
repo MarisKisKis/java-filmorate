@@ -60,7 +60,7 @@ public class UserDbStorage implements UserStorage {
     public User createUser(User user) {
         String userRows = "insert into users (login, name, EMAIL, birthday)" +
                 " VALUES ( ?, ?, ?, ?)";
-        KeyHolder kh = new GeneratedKeyHolder();
+        KeyHolder kh = new GeneratedKeyHolder(); //делаем кихолдер
         jdbcTemplate.update(connection -> {
             PreparedStatement pst = connection.prepareStatement(userRows, new String[]{"id"});
             pst.setString(1, user.getLogin());
