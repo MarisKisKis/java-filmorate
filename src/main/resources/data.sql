@@ -1,5 +1,15 @@
+create table if not exists users
+(
+    id  long AUTO_INCREMENT NOT NULL,
+    login    varchar(500),
+    name     varchar(50),
+    email    varchar(50),
+    birthday date,
+    CONSTRAINT pk_users PRIMARY KEY (id)
+);
 insert into USERS (ID, LOGIN, NAME, EMAIL, BIRTHDAY) VALUES (1, 'Kitty', 'Mary', 'kit@ya', '2000-09-09' )
 delete from USERS;
+drop table users;
 
 insert into rating (rating_id, RATING_NAME)
 values (1, 'G');
