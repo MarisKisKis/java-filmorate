@@ -29,7 +29,7 @@ create table if not exists mutual_friends
 create table if not exists rating
 (
     rating_id int primary key,
-    rating_name character varying(500)
+    rating_name  character varying(500)
 );
 
 create table if not exists films
@@ -50,18 +50,16 @@ create table if not exists film_likes
     film_id long REFERENCES films (id)
 );
 
-
-create table if not exists film_genre
-(
-    genre_to_film long AUTO_INCREMENT NOT NULL,
-    id int,
-    film_id long REFERENCES films (id),
-    CONSTRAINT pk_film_genre PRIMARY KEY (genre_to_film)
-);
-
 create table if not exists genres
 (
     id int primary key,
     genre_name varchar(50)
 );
+
+create table if not exists film_genre
+(
+    id int primary key REFERENCES genres (id),
+    film_id long REFERENCES films (id)
+
+    );
 

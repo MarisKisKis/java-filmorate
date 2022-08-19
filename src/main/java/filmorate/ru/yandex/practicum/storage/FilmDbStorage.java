@@ -18,6 +18,7 @@ import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Qualifier("filmDbStorage")
@@ -44,16 +45,14 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film findFilmById(long id) {
         String sqlQuery = "select f.*," +
-                " r.RATING_NAME, r.RATING_ID, ARRAY_AGG(g.id || ':' || g.genre_name) AS genres_id " +
+                " r.rating_name, r.RATING_ID, ARRAY_AGG(g.id || ':' || g.genre_name) AS genres_id " +
                 "from films as f " +
                 "left join FILM_GENRE FG on f.ID = FG.FILM_ID " +
                 "left join GENRES g on FG.ID = G.ID " +
                 "left join RATING r on f.MPA = r.rating_id " +
-                "where f.id = ?" +
+                " where f.id = ? " +
                 "group by f.ID";
 
-        //String sqlQuery = "select f.* , fg.*, r.rating_id from FILMS f, FILM_GENRE fg, RATING r where f.id=? and fg.FILM_ID = ?" +
-        //     " and f.mpa=r.RATING_ID";
         List<Film> filmRows = jdbcTemplate.query(sqlQuery, FilmDbStorage::makeFilm, id);
         if (filmRows.size() != 1) {
             throw new NotFoundException();
@@ -66,7 +65,6 @@ public class FilmDbStorage implements FilmStorage {
 
         String filmQuery = "insert into films (name, release_date, description, duration, mpa) " +
                 "VALUES (?, ?, ?, ?, ?)";
-        // String genreQuery = "insert into film_genre (genre_id, film_id) values (?, ?)";
         KeyHolder kh1 = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement pst = connection.prepareStatement(filmQuery, new String[]{"id"});
@@ -86,16 +84,12 @@ public class FilmDbStorage implements FilmStorage {
         if (film.getGenres() != null) {
             String filmGenreQuery = "insert into film_genre (id, film_id)" +
                     "VALUES (?, ?)";
-            KeyHolder kh2 = new GeneratedKeyHolder();
+
             for (Genre gener : film.getGenres()) {
-                jdbcTemplate.update(connection -> {
-                    PreparedStatement pst = connection.prepareStatement(filmGenreQuery, new String[]{"genre_to_film"});
-                    pst.setInt(1, gener.getId());
-                    pst.setLong(2, film.getId());
-                    return pst;
-                }, kh2);
+                jdbcTemplate.update(filmGenreQuery, gener.getId(), film.getId());
             }
         }
+        addLike(film.getId(), 1);
         return film;
     }
 
@@ -110,8 +104,11 @@ public class FilmDbStorage implements FilmStorage {
                 film.getMpa().getId(),
                 film.getId());
         log.info("Обновлен фильм: {} {}", film.getId(), film.getName());
+        deleteGenre(film);
+        setFilmGenre(film);
         return film;
     }
+
 
     @Override
     public void addLike(long filmId, long userId) {
@@ -126,65 +123,79 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Integer> getTopFilms() {
+    public List<Integer> getTopFilms(int count) {
         ArrayList<Integer> topFilms = new ArrayList<>();
-        SqlRowSet topFilmRows = jdbcTemplate.queryForRowSet("select * from FILMS f where f.id = (select f2.id from FILMS f2, FILM_LIKES fl where f2.id = fl.FILM_ID" +
-                "                                  group by f2.id  order by count(fl.FILM_ID) limit 10)");
+        SqlRowSet topFilmRows = jdbcTemplate.queryForRowSet("select f.id from films f where f.id in (select fl.film_id from film_likes fl group by fl.film_id order by count(fl.film_id)) limit  10");
+             //   "f, FILM_LIKES where f.id = (select f2.id from FILMS f2, FILM_LIKES fl where f2.id = fl.FILM_ID" +
+             //   "                                  group by f2.id  order by count(fl.FILM_ID))");
         while (topFilmRows.next()) {
-        topFilms.add(topFilmRows.getInt("id"));
+            topFilms.add(topFilmRows.getInt("id"));
         }
         return topFilms;
     }
 
-    public boolean deleteLike(long filmId, long userId) {
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("delete from film_likes where film_id = ? and user_id =?",
-                filmId, userId);
-        return jdbcTemplate.update(String.valueOf(filmRows), "likeness_id") > 0;
+    public void deleteLike(long filmId, long userId) {
+        String likeSql = "DELETE FROM film_likes where film_id=? and user_id=?";
+        jdbcTemplate.update(connection -> {
+            PreparedStatement pst = connection.prepareStatement(likeSql, new String[]{"likeness_id"});
+            pst.setLong(1, filmId);
+            pst.setLong(2, userId);
+            int rowsDeleted = pst.executeUpdate();
+            if (rowsDeleted > 0) {
+                System.out.println("A user was deleted successfully!");
+            }
+            return pst;
+        });
     }
 
-    public List<String> getAllGenres() {
-        ArrayList<String> allGenres = new ArrayList<>();
+    public List<Genre> getAllGenres() {
+        ArrayList<Genre> allGenres = new ArrayList<>();
         SqlRowSet genresRows = jdbcTemplate.queryForRowSet("select * from genres");
-        if (genresRows.next()) {
-            genresRows.getInt("genre_id");
-            allGenres.add(genresRows.getString("genre_name"));
+        while (genresRows.next()) {
+            Genre genre = new Genre(
+                    genresRows.getInt("id"),
+                    genresRows.getString("genre_name"));
+            genresRows.getInt("id");
+            allGenres.add(genre);
             log.info("Жанры получены");
-            return allGenres;
+        }
+        return allGenres;
+    }
+
+    public Genre findGenreById(int genreId) {
+        SqlRowSet genresRows = jdbcTemplate.queryForRowSet("select * from genres where ID=?", genreId);
+        if (genresRows.next()) {
+            Genre genre = new Genre(
+                    genresRows.getInt("id"),
+                    genresRows.getString("genre_name"));
+            return genre;
         } else {
             log.info("Ошибка");
             return null;
         }
     }
 
-    public String findGenreById(int genreId) {
-        SqlRowSet genresRows = jdbcTemplate.queryForRowSet("select GENRE_NAME from genres where ID=?", genreId);
-        if (genresRows.next()) {
-            genresRows.getInt("genre_id");
-            log.info("Жанры получены");
-            return genresRows.getString("genre_name");
-        } else {
-            log.info("Ошибка");
-            return null;
-        }
-    }
-
-    public List<String> getAllMpa() {
-        ArrayList<String> allMpa = new ArrayList<>();
+    public List<Mpa> getAllMpa() {
+        ArrayList<Mpa> allMpa = new ArrayList<>();
         SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("select * from RATING");
         while (mpaRows.next()) {
-            mpaRows.getInt("rating_id");
-            allMpa.add(mpaRows.getString("rating_name"));
-            log.info("Жанры получены");
+            Mpa mpa = new Mpa(
+                    mpaRows.getInt("rating_id"),
+                    mpaRows.getString("rating_name"));
+            allMpa.add(mpa);
+            log.info("Рейтинги получены");
         }
         return allMpa;
     }
 
-    public String findMpaById(int ratingId) {
-        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("select rating_name from RATING where RATING_ID=?", ratingId);
+    public Mpa findMpaById(int ratingId) {
+        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("select * from RATING where RATING_ID=?", ratingId);
         if (mpaRows.next()) {
-            mpaRows.getInt("rating_id");
-            log.info("Жанры получены");
-            return mpaRows.getString("rating_name");
+            Mpa mpa = new Mpa(
+                    mpaRows.getInt(ratingId),
+                    mpaRows.getString("rating_name")
+            );
+            return mpa;
         } else {
             log.info("Ошибка");
             return null;
@@ -195,17 +206,13 @@ public class FilmDbStorage implements FilmStorage {
         Mpa mpa = new Mpa(
                 rs.getInt("rating_id"),
                 rs.getString("rating_name"));
-        // LinkedHashSet<Genre> genres_id = (LinkedHashSet<Genre>) rs.getArray("genre_id");
-        Set<Genre> genres_id = null;
-        Object genreFromRow = rs.getArray("id");
-        if (genreFromRow != null) {
-            genres_id = new HashSet<>();
-            Object[] arr = (Object[]) rs.getArray("id").getArray();
+        LinkedHashSet<Genre> genres_id = null;
+        // Object genreFromRow = rs.getArray("genres_id");
+        Object[] arr = (Object[]) rs.getArray("genres_id").getArray();
+        if (arr[0] != null) {
+            genres_id = new LinkedHashSet<>();
             for (Object genre : arr) {
                 String[] mapper = genre.toString().split(":");
-                if (mapper[1] == null) {
-                    mapper[1] = "not found";
-                }
                 genres_id.add(new Genre(Integer.parseInt(mapper[0]), mapper[1]));
             }
         }
@@ -219,5 +226,36 @@ public class FilmDbStorage implements FilmStorage {
                 mpa,
                 genres_id);
         return film;
+    }
+
+    void  setFilmGenre (Film film) {
+        if ((film.getGenres() == null) || (film.getGenres().isEmpty())) {
+            String genteSql = "DELETE FROM film_genre where film_id=?";
+            jdbcTemplate.update(genteSql, film.getId());
+        } else {
+            String filmGenreQuery = "insert into film_genre (id, film_id)" +
+                    "VALUES (?, ?)";
+            for (Genre gener : film.getGenres()) {
+                jdbcTemplate.update(filmGenreQuery, gener.getId(), film.getId());
+            }
+        }
+    }
+
+    public List<Genre> getFilmGenres (Film film) {
+        List<Genre> genresByFilm = new ArrayList<>();
+        SqlRowSet genresRows = jdbcTemplate.queryForRowSet("select from film_genre where film_id=?", film.getId());
+        while (genresRows.next()) {
+            Genre genre = new Genre(
+                    genresRows.getInt("id"),
+                    genresRows.getString("genre_name"));
+            genresByFilm.add(genre);
+        }
+        Comparator comparator = Comparator.naturalOrder();
+        genresByFilm.sort(comparator);
+        return genresByFilm;
+    }
+    void deleteGenre (Film film) {
+        String genteSql = "DELETE FROM film_genre where film_id=?";
+        jdbcTemplate.update(genteSql, film.getId());
     }
 }

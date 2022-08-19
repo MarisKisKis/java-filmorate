@@ -78,34 +78,6 @@ public class FilmController {
         return filmService.getTopFilms(count);
     }
 
-     @ResponseBody
-    @GetMapping("/genres")
-    List<String> getAllGenres() {
-        log.info("Получили все жанры");
-        return filmService.getAllGenres();
-    }
-
-    @ResponseBody
-    @GetMapping("/genres/{filmId}")
-    String getGenreById(int genreId) {
-        log.info("Получили жанр под id {}", genreId);
-        return filmService.findGenreById(genreId);
-    }
-
-    @ResponseBody
-    @GetMapping("/mpa")
-    List<String> getAllMpa() {
-        log.info("Получили все рейтинги");
-        return filmService.getAllMpa();
-    }
-
-    @ResponseBody
-    @GetMapping("/mpa/{ratingId}")
-    String getMpaById(int ratingId) {
-        log.info("Получили mpa под id {}", ratingId);
-        return filmService.findMpaById(ratingId);
-    }
-
     public void validate(Film film) {
         if (film.getName().isEmpty()) {
             log.warn("Ошибка названия фильма " + film.getId()); //нецелесообразно вызывать в лог film.getName(),

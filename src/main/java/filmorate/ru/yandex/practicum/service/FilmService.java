@@ -2,6 +2,8 @@ package filmorate.ru.yandex.practicum.service;
 
 import filmorate.ru.yandex.practicum.exception.NotFoundException;
 import filmorate.ru.yandex.practicum.model.Film;
+import filmorate.ru.yandex.practicum.model.Genre;
+import filmorate.ru.yandex.practicum.model.Mpa;
 import filmorate.ru.yandex.practicum.model.User;
 import filmorate.ru.yandex.practicum.storage.FilmStorage;
 import filmorate.ru.yandex.practicum.storage.UserStorage;
@@ -63,15 +65,19 @@ public class FilmService {
 
 
     public List<Film> getTopFilms(int count) {
-        List<Integer> top10FilmsIds = filmStorage.getTopFilms();
-        if ((top10FilmsIds.size() < 10) && (count == 10)) {
+        List<Integer> top10FilmsIds = filmStorage.getTopFilms(count);
+        List<Film> topCountFilms = new ArrayList<>();
+
+        if (top10FilmsIds.size() < 10)   {
             count = top10FilmsIds.size();
+            for (int i = 0; i < top10FilmsIds.size(); i++) {
+                topCountFilms.add(filmStorage.findFilmById(top10FilmsIds.get(i)));
+            }
         } else {
             count = count;
-        }
-        List<Film> topCountFilms = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            topCountFilms.add(filmStorage.findFilmById(top10FilmsIds.get(i)));
+            for (int i = 0; i < top10FilmsIds.size(); i++) {
+                topCountFilms.add(filmStorage.findFilmById(top10FilmsIds.get(i)));
+            }
         }
 
         return topCountFilms;
@@ -88,21 +94,28 @@ public class FilmService {
         filmStorage.updateFilm(film);
     }
 
-    public List<String> getAllGenres() {
+    public List<Genre> getAllGenres() {
        return filmStorage.getAllGenres();
     }
 
-    public String findGenreById(int genreId) {
-        String genre = filmStorage.findGenreById(genreId);
+    public Genre findGenreById(int genreId) {
+        if (genreId <= 0) {
+            throw new NotFoundException("Жанр с id " + genreId+ " не найден");
+        }
+        Genre genre = filmStorage.findGenreById(genreId);
         return genre;
     }
 
-    public List<String> getAllMpa() {
+    public List<Mpa> getAllMpa() {
         return filmStorage.getAllMpa();
     }
 
-    public String findMpaById(int ratingId) {
-        String mpa = filmStorage.findMpaById(ratingId);
+    public Mpa findMpaById(int ratingId) {
+        if (ratingId <= 0) {
+            throw new NotFoundException("MPA с id " + ratingId + " не найден");
+        }
+        Mpa mpa = filmStorage.findMpaById(ratingId);
         return mpa;
     }
+
 }

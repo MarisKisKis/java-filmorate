@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Mpa {
     private int id;
-    private String mpaName;
+    private String name;
 
-    public Mpa(int id, String mpaName) {
+    public Mpa(int id, String name) {
         this.id = id;
-        this.mpaName = mpaName;
+        this.name = name;
     }
 }

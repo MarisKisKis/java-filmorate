@@ -1,8 +1,11 @@
 package filmorate.ru.yandex.practicum.storage;
 
 import filmorate.ru.yandex.practicum.model.Film;
+import filmorate.ru.yandex.practicum.model.Genre;
+import filmorate.ru.yandex.practicum.model.Mpa;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.GenericArrayType;
 import java.util.List;
 
 @Component
@@ -13,11 +16,11 @@ public interface FilmStorage {
     public Film updateFilm(Film film);
     public void addLike(long filmId, long userId);
 
-    public List<Integer> getTopFilms();
+    public List<Integer> getTopFilms(int count);
 
-    public boolean deleteLike(long filmId, long userId);
-    public List<String> getAllGenres();
-    public String findGenreById(int genreId);
-    public List<String> getAllMpa();
-    public String findMpaById(int ratingId);
+    public void deleteLike(long filmId, long userId);
+    public List<Genre> getAllGenres();
+    public Genre findGenreById(int genreId);
+    public List<Mpa> getAllMpa();
+    public Mpa findMpaById(int ratingId);
 }

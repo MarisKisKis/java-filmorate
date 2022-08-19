@@ -10,6 +10,7 @@ import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -25,10 +26,10 @@ public class Film {
     private Mpa mpa;
     private Set <Genre> genres;
     @JsonIgnore
-    private Set<Long> likes = new HashSet<>();
+    private Set<Long> likes = new LinkedHashSet<>();
 
     public Film(long film_id, String name, String description, LocalDate releaseDate, int duration,
-                Mpa mpa, Set <Genre> genres) {
+                Mpa mpa, LinkedHashSet <Genre> genres) {
         this.id = film_id;
         this.name = name;
         this.description = description;
@@ -37,4 +38,5 @@ public class Film {
         this.mpa = mpa;
         this.genres = genres;
     }
+
 }

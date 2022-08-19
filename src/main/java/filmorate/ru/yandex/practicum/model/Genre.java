@@ -6,14 +6,14 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+//@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Genre {
     private int id;
-    private String genreName;
+    private String name;
 
-    public Genre(int genreId, String genreName) {
+    public Genre(int genreId, String name) {
         this.id = genreId;
-        this.genreName = genreName;
+        this.name = name;
     }
 
     public int getId()
