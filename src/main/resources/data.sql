@@ -1,5 +1,4 @@
 
-
 insert into rating (rating_id, RATING_NAME)
 values (1, 'G');
 insert into rating (rating_id, RATING_NAME)

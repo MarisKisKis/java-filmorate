@@ -25,7 +25,6 @@ create table if not exists mutual_friends
 
 );
 
-
 create table if not exists rating
 (
     rating_id int primary key,
