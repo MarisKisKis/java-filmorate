@@ -24,7 +24,7 @@ public class Film {
     private LocalDate releaseDate;
     private int duration;
     private Mpa mpa;
-    private Set <Genre> genres;
+    private LinkedHashSet <Genre> genres;
     @JsonIgnore
     private Set<Long> likes = new LinkedHashSet<>();
 
