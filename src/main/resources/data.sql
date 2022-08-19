@@ -9,7 +9,7 @@ create table if not exists users
 );
 insert into USERS (LOGIN, NAME, EMAIL, BIRTHDAY) VALUES ( 'Kitty', 'Mary', 'kit@ya', '2000-09-09' );
 delete from USERS;
-drop table users;
+drop table users cascade;
 
 insert into rating (rating_id, RATING_NAME)
 values (1, 'G');
