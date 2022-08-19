@@ -38,10 +38,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User findUserById(long id) {
-        // выполняем запрос к базе данных.
         SqlRowSet userRows = jdbcTemplate.queryForRowSet("select * from users where id = ?", id);
-
-        // обрабатываем результат выполнения запроса
         if (userRows.next()) {
             User user = new User(
                     userRows.getLong("id"),
@@ -87,7 +84,6 @@ public class UserDbStorage implements UserStorage {
 
 
     public void addFriend(long userId, long friendId) {
-
         String userRows = "insert into MUTUAL_FRIENDS (user_id, friend_id) VALUES (?, ?)";
         KeyHolder kh = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {

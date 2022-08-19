@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 @Service
 public class FilmService {
@@ -67,19 +66,17 @@ public class FilmService {
     public List<Film> getTopFilms(int count) {
         List<Integer> top10FilmsIds = filmStorage.getTopFilms(count);
         List<Film> topCountFilms = new ArrayList<>();
-
-        if (top10FilmsIds.size() < 10)   {
-            count = top10FilmsIds.size();
-            for (int i = 0; i < top10FilmsIds.size(); i++) {
+        if (count< 10)   {
+            for (int i = 0; i < count; i++) {
                 topCountFilms.add(filmStorage.findFilmById(top10FilmsIds.get(i)));
             }
         } else {
-            count = count;
             for (int i = 0; i < top10FilmsIds.size(); i++) {
+
                 topCountFilms.add(filmStorage.findFilmById(top10FilmsIds.get(i)));
             }
         }
-
+        System.out.println(topCountFilms.size());
         return topCountFilms;
     }
 
@@ -117,5 +114,4 @@ public class FilmService {
         Mpa mpa = filmStorage.findMpaById(ratingId);
         return mpa;
     }
-
 }

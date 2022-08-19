@@ -125,9 +125,9 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Integer> getTopFilms(int count) {
         ArrayList<Integer> topFilms = new ArrayList<>();
-        SqlRowSet topFilmRows = jdbcTemplate.queryForRowSet("select f.id from films f where f.id in (select fl.film_id from film_likes fl group by fl.film_id order by count(fl.film_id)) limit  10");
-             //   "f, FILM_LIKES where f.id = (select f2.id from FILMS f2, FILM_LIKES fl where f2.id = fl.FILM_ID" +
-             //   "                                  group by f2.id  order by count(fl.FILM_ID))");
+        SqlRowSet topFilmRows = jdbcTemplate.queryForRowSet("select f.id from films f where f.id in " +
+                "(select fl.film_id from film_likes fl group by fl.film_id order by count(fl.film_id)) limit  10");
+
         while (topFilmRows.next()) {
             topFilms.add(topFilmRows.getInt("id"));
         }
@@ -241,19 +241,6 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    public List<Genre> getFilmGenres (Film film) {
-        List<Genre> genresByFilm = new ArrayList<>();
-        SqlRowSet genresRows = jdbcTemplate.queryForRowSet("select from film_genre where film_id=?", film.getId());
-        while (genresRows.next()) {
-            Genre genre = new Genre(
-                    genresRows.getInt("id"),
-                    genresRows.getString("genre_name"));
-            genresByFilm.add(genre);
-        }
-        Comparator comparator = Comparator.naturalOrder();
-        genresByFilm.sort(comparator);
-        return genresByFilm;
-    }
     void deleteGenre (Film film) {
         String genteSql = "DELETE FROM film_genre where film_id=?";
         jdbcTemplate.update(genteSql, film.getId());

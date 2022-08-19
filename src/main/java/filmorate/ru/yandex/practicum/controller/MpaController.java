@@ -1,9 +1,6 @@
 package filmorate.ru.yandex.practicum.controller;
-
-import filmorate.ru.yandex.practicum.exception.NotFoundException;
 import filmorate.ru.yandex.practicum.model.Mpa;
 import filmorate.ru.yandex.practicum.service.FilmService;
-import filmorate.ru.yandex.practicum.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
