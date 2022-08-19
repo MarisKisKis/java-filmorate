@@ -7,7 +7,7 @@ create table if not exists users
     birthday date,
     CONSTRAINT pk_users PRIMARY KEY (id)
 );
-insert into USERS (ID, LOGIN, NAME, EMAIL, BIRTHDAY) VALUES (1, 'Kitty', 'Mary', 'kit@ya', '2000-09-09' )
+insert into USERS (LOGIN, NAME, EMAIL, BIRTHDAY) VALUES ( 'Kitty', 'Mary', 'kit@ya', '2000-09-09' )
 delete from USERS;
 drop table users;
 
