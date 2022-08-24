@@ -11,7 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.List;
+
 
 @RestController
 @Slf4j
@@ -28,13 +29,12 @@ public class FilmController {
     }
 
     @GetMapping
-    public Collection <Film> findAll() {
-        log.trace("Текущее количество фильмов : {}", filmService.findAllFilms().size());
+    public List<Film> findAll() {
+        log.trace("Текущее количество фильмов : {}", filmService.findAllFilms());
         return filmService.findAllFilms();
     }
 
-    @SneakyThrows // как вариант, или лучше в try-catch? лучше оставить валидацию на уровне контроллера, но idea требует
-    // обознначить исключение
+    @SneakyThrows
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
         validate(film);
@@ -57,6 +57,7 @@ public class FilmController {
         log.info("Получили фильм по id ", filmId);
         return filmService.getFilm(filmId);
     }
+
     @SneakyThrows
     @PutMapping("/{filmId}/like/{userId}")
     public void addLike(@PathVariable long filmId, @PathVariable long userId) {
@@ -69,10 +70,11 @@ public class FilmController {
     }
     @ResponseBody
     @GetMapping("/popular")
-    Collection<Film> getTopPopular(@RequestParam(defaultValue = "10") int count) {
+    List<Film> getTopPopular(@RequestParam(defaultValue = "10") int count) {
         log.info("Получили " + count + " самых популярных фильмов");
         return filmService.getTopFilms(count);
     }
+
     public void validate(Film film) {
         if (film.getName().isEmpty()) {
             log.warn("Ошибка названия фильма " + film.getId()); //нецелесообразно вызывать в лог film.getName(),

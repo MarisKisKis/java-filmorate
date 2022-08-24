@@ -3,8 +3,10 @@ package filmorate.ru.yandex.practicum.service;
 import filmorate.ru.yandex.practicum.exception.NotFoundException;
 import filmorate.ru.yandex.practicum.model.Film;
 import filmorate.ru.yandex.practicum.model.User;
-import filmorate.ru.yandex.practicum.storage.FilmStorage;
-import filmorate.ru.yandex.practicum.storage.UserStorage;
+import filmorate.ru.yandex.practicum.storage.dao.FilmStorage;
+import filmorate.ru.yandex.practicum.storage.dao.LikesDao;
+import filmorate.ru.yandex.practicum.storage.dao.UserStorage;
+import filmorate.ru.yandex.practicum.storage.dao.MpaDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,73 +17,69 @@ public class FilmService {
 
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final LikesDao likesDao;
 
     @Autowired
-    public FilmService (UserStorage userStorage, FilmStorage filmStorage) {
+    public FilmService(UserStorage userStorage, FilmStorage filmStorage, LikesDao likesDao) {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
+        this.likesDao = likesDao;
+    }
+
+    public List<Film> findAllFilms() {
+        List<Integer> allFilmIds = filmStorage.findAll();
+        List<Film> allFilms = new ArrayList<>();
+        for (int i = 0; i < allFilmIds.size(); i++) {
+            allFilms.add(filmStorage.findFilmById(allFilmIds.get(i)));
+        }
+        return allFilms;
     }
 
     public Film getFilm(long filmId) throws NotFoundException {
         if (filmId < 0) {
             throw new NotFoundException("Не найден фильм с id" + filmId);
         }
-        final Film film = filmStorage.getFilm(filmId);
+        Film film = filmStorage.findFilmById(filmId);
         return film;
     }
 
     public void addLike(long userId, long filmId) throws NotFoundException {
-        User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId);
+        User user = userStorage.findUserById(userId);
+        Film film = filmStorage.findFilmById(filmId);
         if (user == null) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
         }
         if (film == null) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        filmStorage.addLike(film, user);
+        likesDao.addLike(userId, filmId);
     }
 
     public void deleteLike(long userId, long filmId) throws NotFoundException {
-        User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId);
-        if (user == null) {
+        if (userId <= 0) {
             throw new NotFoundException("Пользователь с id " + userId + " не найден");
-        }
-        if (film == null) {
+        } if (filmId <= 0) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        filmStorage.deleteLike(film, user);
+        likesDao.deleteLike(userId, filmId);
     }
+
 
     public List<Film> getTopFilms(int count) {
-        Collection<Film> films = filmStorage.findAll();
-        List<Film> topFilms1 = new ArrayList<>();
-        for (Film film1 : films) {
-            topFilms1.add(film1); // переносим объекты коллекции в список для применения сортировки
-        }
-        Collections.sort(topFilms1, new Comparator<Film>() {
-            @Override
-            public int compare(Film o1, Film o2) {
-                int result = Long.compare(o1.getLikes().size(), o2.getLikes().size()); // отсортировали
-                return result;
+        List<Integer> top10FilmsIds = filmStorage.getTopFilms(count);
+        List<Film> topCountFilms = new ArrayList<>();
+        if (count< 10)   {
+            for (int i = 0; i < count; i++) {
+                topCountFilms.add(filmStorage.findFilmById(top10FilmsIds.get(i)));
             }
-        });
-        Collections.reverse(topFilms1);
-        List<Film> topFilms = new ArrayList<>();
-        if ((topFilms1.size() < 10) && (count == 10)) { // проверили, если count не задан и фильмов меньше 10
-            count = topFilms1.size();
         } else {
-            count = count; // вернули значение count, если он задан
-        }
-        topFilms = topFilms1.subList(0, count);
-        return topFilms;
-    }
+            for (int i = 0; i < top10FilmsIds.size(); i++) {
 
-    public Collection<Film> findAllFilms() {
-        Collection<Film> allFilms;
-        allFilms = filmStorage.findAll();
-        return allFilms;
+                topCountFilms.add(filmStorage.findFilmById(top10FilmsIds.get(i)));
+            }
+        }
+        System.out.println(topCountFilms.size());
+        return topCountFilms;
     }
 
     public Film save(Film film) {
@@ -90,7 +88,7 @@ public class FilmService {
 
     public void updateFilm(Film film) throws NotFoundException {
         if (film == null) {
-            throw new NotFoundException("Фильм с id " + film + " не найден");
+            throw new NotFoundException("Фильм" + film + " не найден");
         }
         filmStorage.updateFilm(film);
     }
