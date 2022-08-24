@@ -1,4 +1,4 @@
-package filmorate.ru.yandex.practicum.storage;
+package filmorate.ru.yandex.practicum.storage.dao;
 
 import filmorate.ru.yandex.practicum.model.Film;
 import filmorate.ru.yandex.practicum.model.Genre;
@@ -14,13 +14,5 @@ public interface FilmStorage {
     public Film findFilmById(long id);
     public Film saveFilm(Film film);
     public Film updateFilm(Film film);
-    public void addLike(long filmId, long userId);
-
     public List<Integer> getTopFilms(int count);
-
-    public void deleteLike(long filmId, long userId);
-    public List<Genre> getAllGenres();
-    public Genre findGenreById(int genreId);
-    public List<Mpa> getAllMpa();
-    public Mpa findMpaById(int ratingId);
 }

@@ -1,12 +1,13 @@
-package filmorate.ru.yandex.practicum.storage;
+package filmorate.ru.yandex.practicum.storage.impl;
 
 import filmorate.ru.yandex.practicum.exception.NotFoundException;
 import filmorate.ru.yandex.practicum.model.Film;
 import filmorate.ru.yandex.practicum.model.Genre;
 import filmorate.ru.yandex.practicum.model.Mpa;
+import filmorate.ru.yandex.practicum.storage.dao.FilmStorage;
+import filmorate.ru.yandex.practicum.storage.dao.LikesDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -18,16 +19,14 @@ import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @Qualifier("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final Logger log = LoggerFactory.getLogger(FilmDbStorage.class);
 
-    final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
     public FilmDbStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -89,7 +88,6 @@ public class FilmDbStorage implements FilmStorage {
                 jdbcTemplate.update(filmGenreQuery, gener.getId(), film.getId());
             }
         }
-        addLike(film.getId(), 1);
         return film;
     }
 
@@ -109,19 +107,6 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
-
-    @Override
-    public void addLike(long filmId, long userId) {
-        String likeRows = "insert into film_likes (user_id, film_id) VALUES (?, ?)";
-        KeyHolder kh = new GeneratedKeyHolder();
-        jdbcTemplate.update(connection -> {
-            PreparedStatement pst = connection.prepareStatement(likeRows, new String[]{"likeness_id"});
-            pst.setLong(1, userId);
-            pst.setLong(2, filmId);
-            return pst;
-        }, kh);
-    }
-
     @Override
     public List<Integer> getTopFilms(int count) {
         ArrayList<Integer> topFilms = new ArrayList<>();
@@ -132,74 +117,6 @@ public class FilmDbStorage implements FilmStorage {
             topFilms.add(topFilmRows.getInt("id"));
         }
         return topFilms;
-    }
-
-    public void deleteLike(long filmId, long userId) {
-        String likeSql = "DELETE FROM film_likes where film_id=? and user_id=?";
-        jdbcTemplate.update(connection -> {
-            PreparedStatement pst = connection.prepareStatement(likeSql, new String[]{"likeness_id"});
-            pst.setLong(1, filmId);
-            pst.setLong(2, userId);
-            int rowsDeleted = pst.executeUpdate();
-            if (rowsDeleted > 0) {
-                System.out.println("A user was deleted successfully!");
-            }
-            return pst;
-        });
-    }
-
-    public List<Genre> getAllGenres() {
-        ArrayList<Genre> allGenres = new ArrayList<>();
-        SqlRowSet genresRows = jdbcTemplate.queryForRowSet("select * from genres");
-        while (genresRows.next()) {
-            Genre genre = new Genre(
-                    genresRows.getInt("id"),
-                    genresRows.getString("genre_name"));
-            genresRows.getInt("id");
-            allGenres.add(genre);
-            log.info("Жанры получены");
-        }
-        return allGenres;
-    }
-
-    public Genre findGenreById(int genreId) {
-        SqlRowSet genresRows = jdbcTemplate.queryForRowSet("select * from genres where ID=?", genreId);
-        if (genresRows.next()) {
-            Genre genre = new Genre(
-                    genresRows.getInt("id"),
-                    genresRows.getString("genre_name"));
-            return genre;
-        } else {
-            log.info("Ошибка");
-            return null;
-        }
-    }
-
-    public List<Mpa> getAllMpa() {
-        ArrayList<Mpa> allMpa = new ArrayList<>();
-        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("select * from RATING");
-        while (mpaRows.next()) {
-            Mpa mpa = new Mpa(
-                    mpaRows.getInt("rating_id"),
-                    mpaRows.getString("rating_name"));
-            allMpa.add(mpa);
-            log.info("Рейтинги получены");
-        }
-        return allMpa;
-    }
-
-    public Mpa findMpaById(int ratingId) {
-        SqlRowSet mpaRows = jdbcTemplate.queryForRowSet("select * from RATING where RATING_ID=?", ratingId);
-        if (mpaRows.next()) {
-            Mpa mpa = new Mpa(
-                    mpaRows.getInt(ratingId),
-                    mpaRows.getString("rating_name")
-            );
-            return mpa;
-        } else {
-            log.info("Ошибка");
-            return null;
-        }
     }
 
     public static Film makeFilm(ResultSet rs, int row) throws SQLException {
@@ -228,7 +145,7 @@ public class FilmDbStorage implements FilmStorage {
         return film;
     }
 
-    void  setFilmGenre (Film film) {
+    private void  setFilmGenre (Film film) {
         if ((film.getGenres() == null) || (film.getGenres().isEmpty())) {
             String genteSql = "DELETE FROM film_genre where film_id=?";
             jdbcTemplate.update(genteSql, film.getId());
@@ -241,7 +158,7 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    void deleteGenre (Film film) {
+    private void deleteGenre (Film film) {
         String genteSql = "DELETE FROM film_genre where film_id=?";
         jdbcTemplate.update(genteSql, film.getId());
     }

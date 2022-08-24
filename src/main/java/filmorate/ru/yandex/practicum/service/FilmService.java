@@ -2,11 +2,11 @@ package filmorate.ru.yandex.practicum.service;
 
 import filmorate.ru.yandex.practicum.exception.NotFoundException;
 import filmorate.ru.yandex.practicum.model.Film;
-import filmorate.ru.yandex.practicum.model.Genre;
-import filmorate.ru.yandex.practicum.model.Mpa;
 import filmorate.ru.yandex.practicum.model.User;
-import filmorate.ru.yandex.practicum.storage.FilmStorage;
-import filmorate.ru.yandex.practicum.storage.UserStorage;
+import filmorate.ru.yandex.practicum.storage.dao.FilmStorage;
+import filmorate.ru.yandex.practicum.storage.dao.LikesDao;
+import filmorate.ru.yandex.practicum.storage.dao.UserStorage;
+import filmorate.ru.yandex.practicum.storage.dao.MpaDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +17,15 @@ public class FilmService {
 
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final LikesDao likesDao;
+    private final MpaDao mpaDao;
 
     @Autowired
-    public FilmService (UserStorage userStorage, FilmStorage filmStorage) {
+    public FilmService(UserStorage userStorage, FilmStorage filmStorage, LikesDao likesDao, MpaDao mpaDao) {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
+        this.likesDao = likesDao;
+        this.mpaDao = mpaDao;
     }
 
     public List<Film> findAllFilms() {
@@ -50,7 +54,7 @@ public class FilmService {
         if (film == null) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        filmStorage.addLike(userId, filmId);
+        likesDao.addLike(userId, filmId);
     }
 
     public void deleteLike(long userId, long filmId) throws NotFoundException {
@@ -59,7 +63,7 @@ public class FilmService {
         } if (filmId <= 0) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        filmStorage.deleteLike(userId, filmId);
+        likesDao.deleteLike(userId, filmId);
     }
 
 
@@ -81,6 +85,7 @@ public class FilmService {
     }
 
     public Film save(Film film) {
+        addLike(film.getId(), 1);
         return filmStorage.saveFilm(film);
     }
 
@@ -89,29 +94,5 @@ public class FilmService {
             throw new NotFoundException("Фильм" + film + " не найден");
         }
         filmStorage.updateFilm(film);
-    }
-
-    public List<Genre> getAllGenres() {
-       return filmStorage.getAllGenres();
-    }
-
-    public Genre findGenreById(int genreId) {
-        if (genreId <= 0) {
-            throw new NotFoundException("Жанр с id " + genreId+ " не найден");
-        }
-        Genre genre = filmStorage.findGenreById(genreId);
-        return genre;
-    }
-
-    public List<Mpa> getAllMpa() {
-        return filmStorage.getAllMpa();
-    }
-
-    public Mpa findMpaById(int ratingId) {
-        if (ratingId <= 0) {
-            throw new NotFoundException("MPA с id " + ratingId + " не найден");
-        }
-        Mpa mpa = filmStorage.findMpaById(ratingId);
-        return mpa;
     }
 }
