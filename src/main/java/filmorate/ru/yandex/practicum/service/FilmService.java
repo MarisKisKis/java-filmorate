@@ -18,14 +18,12 @@ public class FilmService {
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
     private final LikesDao likesDao;
-    private final MpaDao mpaDao;
 
     @Autowired
-    public FilmService(UserStorage userStorage, FilmStorage filmStorage, LikesDao likesDao, MpaDao mpaDao) {
+    public FilmService(UserStorage userStorage, FilmStorage filmStorage, LikesDao likesDao) {
         this.userStorage = userStorage;
         this.filmStorage = filmStorage;
         this.likesDao = likesDao;
-        this.mpaDao = mpaDao;
     }
 
     public List<Film> findAllFilms() {
@@ -85,7 +83,6 @@ public class FilmService {
     }
 
     public Film save(Film film) {
-        addLike(film.getId(), 1);
         return filmStorage.saveFilm(film);
     }
 

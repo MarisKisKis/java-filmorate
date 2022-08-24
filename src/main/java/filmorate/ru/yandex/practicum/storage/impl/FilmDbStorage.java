@@ -26,9 +26,11 @@ public class FilmDbStorage implements FilmStorage {
     private final Logger log = LoggerFactory.getLogger(FilmDbStorage.class);
 
     private final JdbcTemplate jdbcTemplate;
+    private final LikesDao likesDao;
 
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, LikesDao likesDao) {
         this.jdbcTemplate = jdbcTemplate;
+        this.likesDao = likesDao;
     }
 
     @Override
@@ -88,6 +90,7 @@ public class FilmDbStorage implements FilmStorage {
                 jdbcTemplate.update(filmGenreQuery, gener.getId(), film.getId());
             }
         }
+        likesDao.addLike(film.getId(), 1);
         return film;
     }
 
